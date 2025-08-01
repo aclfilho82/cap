@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Captação de Alunos</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/locale/pt-br.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #34495e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+        
+        .deadline-header {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 30px;
+            padding: 10px 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        header p {
+            opacity: 0.9;
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+            gap: 20px;
+        }
+        
+        .form-section {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .results-section {
+            flex: 2;
+            min-width: 300px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .card h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light);
+            display: flex;
+            align-items: center;
+        }
+        
+        .card h2 i {
+            margin-right: 10px;
+        }
+        
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn i {
+            margin-right: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, var(--secondary), #1a5f9e);
+            color: white;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(1px);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(to right, var(--danger), #c0392b);
+            color: white;
+            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(231, 76, 60, 0.4);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(to right, var(--warning), #e67e22);
+            color: white;
+            box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3);
+        }
+        
+        .btn-warning:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(243, 156, 18, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(to right, var(--success), #1e8449);
+            color: white;
+            box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3);
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(39, 174, 96, 0.4);
+        }
+        
+        .btn-info {
+            background: linear-gradient(to right, #17a2b8, #138496);
+            color: white;
+            box-shadow: 0 4px 10px rgba(23, 162, 184, 0.3);
+        }
+        
+        .btn-info:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(23, 162, 184, 0.4);
+        }
+        
+        .summary-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .summary-card {
+            flex: 1;
+            min-width: 200px;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .summary-card h3 {
+            color: var(--dark);
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .summary-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+        
+        .progress-container {
+            margin-top: 10px;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, var(--success), #1e8449);
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            margin-top: 20px;
+            position: relative;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .chart-title {
+            color: var(--primary);
+            font-size: 1.4rem;
+        }
+        
+        .chart-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .status {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        
+        .status-on-track {
+            background-color: rgba(39, 174, 96, 0.2);
+            color: var(--success);
+        }
+        
+        .status-off-track {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: var(--danger);
+        }
+        
+        .deadline-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .deadline-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .deadline-btn.active {
+            border-color: var(--secondary);
+            background-color: rgba(52, 152, 219, 0.1);
+            color: var(--secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.2);
+        }
+        
+        .deadline-btn:hover:not(.active) {
+            border-color: var(--secondary);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 0 0 15px 15px;
+        }
+        
+        .course-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .course-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .course-item.selected {
+            border-left: 5px solid var(--secondary);
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+        
+        .course-info {
+            flex: 1;
+        }
+        
+        .course-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .course-actions button {
+            min-width: 40px;
+            height: 40px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+        }
+        
+        .no-data i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #ddd;
+        }
+        
+        .required-info {
+            background-color: rgba(243, 156, 18, 0.1);
+            border-left: 4px solid var(--warning);
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .edit-input {
+            width: 70px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .course-progress {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        
+        .selected-course-title {
+            color: var(--secondary);
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .back-button {
+            background: rgba(52, 152, 219, 0.1);
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--secondary);
+            font-size: 1.2rem;
+        }
+        
+        .back-button:hover {
+            background: rgba(52, 152, 219, 0.2);
+        }
+        
+        .rhythm-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .rhythm-status {
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        
+        .rhythm-on-track {
+            background-color: rgba(39, 174, 96, 0.2);
+            color: var(--success);
+        }
+        
+        .rhythm-off-track {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: var(--danger);
+        }
+        
+        .projection-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .projection-card h4 {
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+        
+        .projection-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+        
+        .rhythm-comparison {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .rhythm-box {
+            padding: 15px;
+            border-radius: 10px;
+            width: 45%;
+        }
+        
+        .rhythm-current {
+            background-color: rgba(52, 152, 219, 0.1);
+            border: 2px solid var(--secondary);
+        }
+        
+        .rhythm-required {
+            background-color: rgba(243, 156, 18, 0.1);
+            border: 2px solid var(--warning);
+        }
+        
+        .rhythm-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .deadline-options {
+                flex-direction: column;
+            }
+            
+            .course-actions {
+                flex-direction: column;
+            }
+            
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .chart-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+            
+            .rhythm-comparison {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .rhythm-box {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-graduation-cap"></i> Sistema de Captação de Alunos</h1>
+            <p>Acompanhe o ritmo de captação e projeções por curso</p>
+            
+            <div class="deadline-header">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Prazo Selecionado: <strong id="currentDeadlineDisplay">Agosto 2025</strong></span>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="form-section">
+                <div class="card">
+                    <h2><i class="fas fa-plus-circle"></i> Adicionar Curso</h2>
+                    <div class="form-group">
+                        <label for="courseName">Nome do Curso</label>
+                        <input type="text" id="courseName" class="form-control" placeholder="Ex: MBA em Gestão de Projetos">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="targetStudents">Meta de Alunos</label>
+                            <input type="number" id="targetStudents" class="form-control" placeholder="Total de alunos necessários" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="currentStudents">Alunos Captados</label>
+                            <input type="number" id="currentStudents" class="form-control" placeholder="Alunos já captados" min="0">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Selecione o Prazo Final</label>
+                        <div class="deadline-options">
+                            <button class="deadline-btn active" data-deadline="2025-08-29" data-display="Agosto 2025">Agosto</button>
+                            <button class="deadline-btn" data-deadline="2025-09-30" data-display="Setembro 2025">Setembro</button>
+                            <button class="deadline-btn" data-deadline="2025-10-31" data-display="Outubro 2025">Outubro</button>
+                        </div>
+                    </div>
+                    
+                    <div class="required-info">
+                        <p><i class="fas fa-info-circle"></i> Todos os campos são obrigatórios para adicionar um novo curso.</p>
+                    </div>
+                    
+                    <button id="addCourseBtn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Adicionar Curso
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <h2><i class="fas fa-book"></i> Meus Cursos</h2>
+                    <div id="coursesList">
+                        <div class="no-data">
+                            <i class="fas fa-book-open"></i>
+                            <p>Nenhum curso adicionado ainda.</p>
+                            <p>Adicione seu primeiro curso usando o formulário ao lado!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="results-section">
+                <div id="allCoursesView">
+                    <div class="card">
+                        <h2><i class="fas fa-chart-line"></i> Progresso da Captação</h2>
+                        
+                        <div class="summary-cards">
+                            <div class="summary-card">
+                                <h3>Meta Total</h3>
+                                <div id="totalTarget" class="summary-value">0</div>
+                                <p>alunos</p>
+                            </div>
+                            
+                            <div class="summary-card">
+                                <h3>Captados</h3>
+                                <div id="totalCaptured" class="summary-value">0</div>
+                                <p>alunos</p>
+                            </div>
+                            
+                            <div class="summary-card">
+                                <h3>Faltam</h3>
+                                <div id="remaining" class="summary-value">0</div>
+                                <p>alunos</p>
+                            </div>
+                            
+                            <div class="summary-card">
+                                <h3>Progresso</h3>
+                                <div id="progressPercent" class="summary-value">0%</div>
+                                <div class="progress-container">
+                                    <div class="progress-bar">
+                                        <div id="progressBar" class="progress-fill" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Diário Necessário</label>
+                            <div id="dailyRequired" class="summary-value">0 alunos/dia</div>
+                            <div id="status" class="status status-on-track">Adicione cursos para começar</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Dias Úteis Restantes</label>
+                            <div id="businessDays" class="summary-value">0 dias</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Progresso por Curso</h3>
+                            <div class="chart-actions">
+                                <button id="downloadAllCsv" class="btn btn-info">
+                                    <i class="fas fa-download"></i> Baixar Relatório
+                                </button>
+                            </div>
+                        </div>
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Projeção de Alunos</h3>
+                        </div>
+                        <canvas id="projectionChart"></canvas>
+                    </div>
+                </div>
+                
+                <div id="courseDetailView" style="display: none;">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <div class="selected-course-title">
+                                <button class="back-button" id="backButton">
+                                    <i class="fas fa-arrow-left"></i>
+                                </button>
+                                <h3 id="courseDetailTitle">Detalhes do Curso</h3>
+                            </div>
+                            <div class="chart-actions">
+                                <button id="downloadCourseCsv" class="btn btn-info">
+                                    <i class="fas fa-download"></i> Baixar Relatório
+                                </button>
+                            </div>
+                        </div>
+                        <div class="course-details">
+                            <div class="summary-cards">
+                                <div class="summary-card">
+                                    <h3>Meta do Curso</h3>
+                                    <div id="courseTarget" class="summary-value">0</div>
+                                    <p>alunos</p>
+                                </div>
+                                
+                                <div class="summary-card">
+                                    <h3>Alunos Captados</h3>
+                                    <div id="courseCaptured" class="summary-value">0</div>
+                                    <p>alunos</p>
+                                </div>
+                                
+                                <div class="summary-card">
+                                    <h3>Faltam</h3>
+                                    <div id="courseRemaining" class="summary-value">0</div>
+                                    <p>alunos</p>
+                                </div>
+                                
+                                <div class="summary-card">
+                                    <h3>Progresso</h3>
+                                    <div id="courseProgressPercent" class="summary-value">0%</div>
+                                    <div class="progress-container">
+                                        <div class="progress-bar">
+                                            <div id="courseProgressBar" class="progress-fill" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Área de ritmo e projeção -->
+                            <div class="rhythm-indicator">
+                                <i class="fas fa-tachometer-alt fa-2x"></i>
+                                <div id="courseRhythmStatus" class="rhythm-status rhythm-off-track">Avaliando ritmo...</div>
+                            </div>
+                            
+                            <div class="rhythm-comparison">
+                                <div class="rhythm-box rhythm-current">
+                                    <h4>Ritmo Atual</h4>
+                                    <div id="currentRhythm" class="rhythm-value">0.0</div>
+                                    <p>alunos/dia</p>
+                                </div>
+                                
+                                <div class="rhythm-box rhythm-required">
+                                    <h4>Ritmo Necessário</h4>
+                                    <div id="requiredRhythm" class="rhythm-value">0.0</div>
+                                    <p>alunos/dia</p>
+                                </div>
+                            </div>
+                            
+                            <div class="projection-card">
+                                <h4>Projeção Final no Ritmo Atual</h4>
+                                <div id="finalProjection" class="projection-value">0 alunos</div>
+                                <p>Estimativa baseada no ritmo atual de captação</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Progresso do Curso</h3>
+                        </div>
+                        <canvas id="courseProgressChart"></canvas>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Projeção de Alunos</h3>
+                        </div>
+                        <canvas id="courseProjectionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Sistema de Acompanhamento de Metas de Captação de Alunos &copy; 2025</p>
+        </footer>
+    </div>
+
+    <script>
+        // Feriados nacionais em 2025 (Brasil)
+        const holidays = [
+            '2025-01-01', // Confraternização Universal
+            '2025-03-03', // Carnaval
+            '2025-03-04', // Carnaval
+            '2025-04-18', // Sexta-feira Santa
+            '2025-04-21', // Tiradentes
+            '2025-05-01', // Dia do Trabalho
+            '2025-06-19', // Corpus Christi
+            '2025-09-07', // Independência do Brasil
+            '2025-10-12', // Nossa Senhora Aparecida
+            '2025-11-02', // Finados
+            '2025-11-15', // Proclamação da República
+            '2025-12-25'  // Natal
+        ];
+        
+        // Lista de cursos
+        let courses = [];
+        let currentDeadline = '2025-08-29';
+        let currentDeadlineDisplay = 'Agosto 2025';
+        let selectedCourse = null;
+        
+        // Referências DOM
+        const addCourseBtn = document.getElementById('addCourseBtn');
+        const deadlineButtons = document.querySelectorAll('.deadline-btn');
+        const coursesList = document.getElementById('coursesList');
+        const totalTargetEl = document.getElementById('totalTarget');
+        const totalCapturedEl = document.getElementById('totalCaptured');
+        const remainingEl = document.getElementById('remaining');
+        const progressPercentEl = document.getElementById('progressPercent');
+        const progressBar = document.getElementById('progressBar');
+        const dailyRequiredEl = document.getElementById('dailyRequired');
+        const businessDaysEl = document.getElementById('businessDays');
+        const statusEl = document.getElementById('status');
+        const allCoursesView = document.getElementById('allCoursesView');
+        const courseDetailView = document.getElementById('courseDetailView');
+        const backButton = document.getElementById('backButton');
+        const courseDetailTitle = document.getElementById('courseDetailTitle');
+        const courseTargetEl = document.getElementById('courseTarget');
+        const courseCapturedEl = document.getElementById('courseCaptured');
+        const courseRemainingEl = document.getElementById('courseRemaining');
+        const courseProgressPercentEl = document.getElementById('courseProgressPercent');
+        const courseProgressBar = document.getElementById('courseProgressBar');
+        const downloadAllCsv = document.getElementById('downloadAllCsv');
+        const downloadCourseCsv = document.getElementById('downloadCourseCsv');
+        const courseRhythmStatus = document.getElementById('courseRhythmStatus');
+        const currentRhythmEl = document.getElementById('currentRhythm');
+        const requiredRhythmEl = document.getElementById('requiredRhythm');
+        const finalProjectionEl = document.getElementById('finalProjection');
+        const currentDeadlineDisplayEl = document.getElementById('currentDeadlineDisplay');
+        
+        // Inicializar gráficos
+        let progressChart, projectionChart, courseProgressChart, courseProjectionChart;
+        
+        // Função para calcular dias úteis entre duas datas
+        function calculateBusinessDays(startDate, endDate) {
+            let count = 0;
+            const current = new Date(startDate);
+            const end = new Date(endDate);
+            
+            // Ajustar para começar no próximo dia se for final de semana ou feriado
+            if (current.getDay() === 0 || current.getDay() === 6 || 
+                holidays.includes(current.toISOString().split('T')[0])) {
+                current.setDate(current.getDate() + 1);
+            }
+            
+            while (current <= end) {
+                const dayOfWeek = current.getDay();
+                const dateStr = current.toISOString().split('T')[0];
+                
+                // Verifica se não é sábado (6), domingo (0) ou feriado
+                if (dayOfWeek !== 0 && dayOfWeek !== 6 && !holidays.includes(dateStr)) {
+                    count++;
+                }
+                
+                current.setDate(current.getDate() + 1);
+            }
+            
+            return count;
+        }
+        
+        // Função para calcular o progresso do curso
+        function calculateCourseProgress() {
+            const today = new Date();
+            today.setHours(0,0,0,0); // Normalizar para meia-noite
+            
+            const endDate = new Date(currentDeadline);
+            endDate.setHours(0,0,0,0);
+            
+            // Calcular dias úteis restantes
+            const businessDaysLeft = calculateBusinessDays(today, endDate);
+            
+            // Calcular totais
+            const totalTarget = courses.reduce((sum, course) => sum + course.targetStudents, 0);
+            const totalCaptured = courses.reduce((sum, course) => sum + course.currentStudents, 0);
+            const remaining = totalTarget - totalCaptured;
+            
+            // Calcular captação diária necessária
+            const dailyRequired = businessDaysLeft > 0 ? (remaining / businessDaysLeft) : 0;
+            
+            // Calcular progresso percentual
+            const progressPercent = totalTarget > 0 ? (totalCaptured / totalTarget) * 100 : 0;
+            
+            // Determinar status
+            let status = "Adicione cursos para começar";
+            
+            if (courses.length > 0) {
+                const totalDays = calculateBusinessDays(new Date('2025-01-01'), endDate);
+                const avgRequired = totalTarget / totalDays;
+                
+                if (progressPercent >= 100) {
+                    status = 'Meta Batida! Parabéns!';
+                } else if (dailyRequired <= avgRequired) {
+                    status = 'No ritmo para bater a meta!';
+                } else {
+                    status = 'Fora do ritmo. Ajuste sua estratégia!';
+                }
+            }
+            
+            return {
+                totalTarget,
+                totalCaptured,
+                remaining,
+                progressPercent,
+                dailyRequired,
+                businessDaysLeft,
+                status
+            };
+        }
+        
+        // Função para calcular progresso de um curso específico
+        function calculateSingleCourseProgress(course) {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            
+            const startDate = new Date('2025-01-01');
+            startDate.setHours(0,0,0,0);
+            
+            const endDate = new Date(course.deadline);
+            endDate.setHours(0,0,0,0);
+            
+            // Calcular dias úteis decorridos
+            const businessDaysElapsed = calculateBusinessDays(startDate, today);
+            
+            // Calcular dias úteis restantes
+            const businessDaysLeft = calculateBusinessDays(today, endDate);
+            
+            // Calcular valores
+            const target = course.targetStudents;
+            const captured = course.currentStudents;
+            const remaining = target - captured;
+            
+            // Calcular ritmo atual
+            const currentRhythm = businessDaysElapsed > 0 ? (captured / businessDaysElapsed) : 0;
+            
+            // Calcular ritmo necessário
+            const requiredRhythm = businessDaysLeft > 0 ? (remaining / businessDaysLeft) : 0;
+            
+            // Calcular projeção final
+            const finalProjection = captured + (currentRhythm * businessDaysLeft);
+            
+            // Determinar status
+            let status = "";
+            let rhythmStatus = "rhythm-off-track";
+            
+            if (finalProjection >= target) {
+                status = 'No ritmo para bater a meta!';
+                rhythmStatus = 'rhythm-on-track';
+            } else {
+                status = 'Fora do ritmo. Ajuste sua estratégia!';
+                rhythmStatus = 'rhythm-off-track';
+            }
+            
+            return {
+                target,
+                captured,
+                remaining,
+                currentRhythm,
+                requiredRhythm,
+                finalProjection,
+                businessDaysLeft,
+                businessDaysElapsed,
+                rhythmStatus,
+                status
+            };
+        }
+        
+        // Função para atualizar a interface
+        function updateUI() {
+            const progress = calculateCourseProgress();
+            
+            // Atualizar resumo
+            totalTargetEl.textContent = progress.totalTarget;
+            totalCapturedEl.textContent = progress.totalCaptured;
+            remainingEl.textContent = progress.remaining;
+            progressPercentEl.textContent = progress.progressPercent.toFixed(1) + '%';
+            progressBar.style.width = progress.progressPercent + '%';
+            dailyRequiredEl.textContent = progress.dailyRequired.toFixed(2) + ' alunos/dia';
+            businessDaysEl.textContent = progress.businessDaysLeft + ' dias';
+            
+            // Atualizar status
+            statusEl.textContent = progress.status;
+            
+            if (courses.length === 0) {
+                statusEl.className = 'status status-on-track';
+            } else {
+                statusEl.className = 'status ' + 
+                    (progress.status.includes('No ritmo') || progress.status.includes('Parabéns') ? 
+                     'status-on-track' : 'status-off-track');
+            }
+            
+            // Renderizar gráficos
+            renderCharts();
+        }
+        
+        // Função para mostrar detalhes do curso
+        function showCourseDetails(course) {
+            selectedCourse = course;
+            
+            // Atualizar UI
+            allCoursesView.style.display = 'none';
+            courseDetailView.style.display = 'block';
+            courseDetailTitle.innerHTML = `<i class="fas fa-book"></i> ${course.name}`;
+            
+            // Calcular progresso do curso
+            const progress = calculateSingleCourseProgress(course);
+            
+            // Atualizar detalhes
+            courseTargetEl.textContent = progress.target;
+            courseCapturedEl.textContent = progress.captured;
+            courseRemainingEl.textContent = progress.remaining;
+            courseProgressPercentEl.textContent = progress.captured > 0 ? (progress.captured/progress.target*100).toFixed(1) + '%' : '0%';
+            courseProgressBar.style.width = progress.captured > 0 ? (progress.captured/progress.target*100) + '%' : '0%';
+            
+            // Atualizar indicadores de ritmo
+            courseRhythmStatus.textContent = progress.status;
+            courseRhythmStatus.className = `rhythm-status ${progress.rhythmStatus}`;
+            currentRhythmEl.textContent = progress.currentRhythm.toFixed(2);
+            requiredRhythmEl.textContent = progress.requiredRhythm.toFixed(2);
+            
+            // Atualizar projeção final
+            finalProjectionEl.textContent = `${Math.min(Math.round(progress.finalProjection), progress.target)} alunos`;
+            
+            // Renderizar gráficos do curso
+            renderCourseCharts(course);
+        }
+        
+        // Função para voltar para a visão geral
+        function showAllCourses() {
+            selectedCourse = null;
+            allCoursesView.style.display = 'block';
+            courseDetailView.style.display = 'none';
+            renderCoursesList();
+            updateUI();
+        }
+        
+        // Função para renderizar os gráficos gerais
+        function renderCharts() {
+            const ctxProgress = document.getElementById('progressChart').getContext('2d');
+            const ctxProjection = document.getElementById('projectionChart').getContext('2d');
+            
+            // Destruir gráficos anteriores se existirem
+            if (progressChart) progressChart.destroy();
+            if (projectionChart) projectionChart.destroy();
+            
+            if (courses.length === 0) {
+                return;
+            }
+            
+            // Dados para o gráfico de progresso
+            const labels = courses.map(course => course.name);
+            const targetValues = courses.map(course => course.targetStudents);
+            const currentValues = courses.map(course => course.currentStudents);
+            
+            progressChart = new Chart(ctxProgress, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Meta de Alunos',
+                            data: targetValues,
+                            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Alunos Captados',
+                            data: currentValues,
+                            backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Progresso por Curso'
+                        }
+                    }
+                }
+            });
+            
+            // Dados para o gráfico de projeção
+            const progress = calculateCourseProgress();
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const endDate = new Date(currentDeadline);
+            endDate.setHours(0,0,0,0);
+            
+            // Criar pontos de dados para a projeção
+            const projectionData = [];
+            const projectionLabels = [];
+            
+            // Adicionar ponto atual
+            projectionData.push(progress.totalCaptured);
+            projectionLabels.push('Hoje');
+            
+            // Calcular incremento diário
+            const dailyIncrement = progress.dailyRequired;
+            let currentValue = progress.totalCaptured;
+            let currentDate = new Date(today);
+            
+            // Adicionar pontos futuros (a cada 5 dias)
+            while (currentDate <= endDate) {
+                currentDate.setDate(currentDate.getDate() + 5);
+                
+                // Verificar se ultrapassou a data final
+                if (currentDate > endDate) {
+                    currentDate = new Date(endDate);
+                }
+                
+                // Calcular dias passados
+                const daysPassed = Math.floor((currentDate - today) / (1000 * 60 * 60 * 24));
+                const projectedValue = progress.totalCaptured + (dailyIncrement * daysPassed);
+                
+                projectionData.push(projectedValue > progress.totalTarget ? progress.totalTarget : projectedValue);
+                projectionLabels.push(currentDate.toLocaleDateString('pt-BR'));
+                
+                if (currentDate >= endDate) break;
+            }
+            
+            projectionChart = new Chart(ctxProjection, {
+                type: 'line',
+                data: {
+                    labels: projectionLabels,
+                    datasets: [
+                        {
+                            label: 'Projeção de Alunos',
+                            data: projectionData,
+                            backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                            borderColor: 'rgba(153, 102, 255, 1)',
+                            borderWidth: 3,
+                            tension: 0.2,
+                            fill: true,
+                            pointRadius: 4,
+                            pointBackgroundColor: 'rgba(153, 102, 255, 1)'
+                        },
+                        {
+                            label: 'Meta Total',
+                            data: projectionData.map(() => progress.totalTarget),
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Projeção de Captação'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Função para renderizar gráficos de um curso específico
+        function renderCourseCharts(course) {
+            const ctxProgress = document.getElementById('courseProgressChart').getContext('2d');
+            const ctxProjection = document.getElementById('courseProjectionChart').getContext('2d');
+            
+            // Destruir gráficos anteriores se existirem
+            if (courseProgressChart) courseProgressChart.destroy();
+            if (courseProjectionChart) courseProjectionChart.destroy();
+            
+            // Calcular progresso do curso
+            const progress = calculateSingleCourseProgress(course);
+            
+            // Gráfico de progresso (barras)
+            courseProgressChart = new Chart(ctxProgress, {
+                type: 'bar',
+                data: {
+                    labels: ['Meta', 'Captados', 'Faltam'],
+                    datasets: [{
+                        label: 'Alunos',
+                        data: [progress.target, progress.captured, progress.remaining],
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(255, 99, 132, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 99, 132, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Progresso do Curso'
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico de projeção
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const endDate = new Date(course.deadline);
+            endDate.setHours(0,0,0,0);
+            
+            // Criar pontos de dados para a projeção
+            const projectionData = [];
+            const projectionLabels = [];
+            
+            // Adicionar ponto atual
+            projectionData.push(progress.captured);
+            projectionLabels.push('Hoje');
+            
+            // Calcular incremento diário (ritmo atual)
+            const dailyIncrement = progress.currentRhythm;
+            let currentValue = progress.captured;
+            let currentDate = new Date(today);
+            
+            // Adicionar pontos futuros (a cada 5 dias)
+            while (currentDate <= endDate) {
+                currentDate.setDate(currentDate.getDate() + 5);
+                
+                // Verificar se ultrapassou a data final
+                if (currentDate > endDate) {
+                    currentDate = new Date(endDate);
+                }
+                
+                // Calcular dias passados
+                const daysPassed = Math.floor((currentDate - today) / (1000 * 60 * 60 * 24));
+                const projectedValue = progress.captured + (dailyIncrement * daysPassed);
+                
+                projectionData.push(projectedValue > progress.target ? progress.target : projectedValue);
+                projectionLabels.push(currentDate.toLocaleDateString('pt-BR'));
+                
+                if (currentDate >= endDate) break;
+            }
+            
+            courseProjectionChart = new Chart(ctxProjection, {
+                type: 'line',
+                data: {
+                    labels: projectionLabels,
+                    datasets: [
+                        {
+                            label: 'Projeção no Ritmo Atual',
+                            data: projectionData,
+                            backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                            borderColor: 'rgba(153, 102, 255, 1)',
+                            borderWidth: 3,
+                            tension: 0.2,
+                            fill: true,
+                            pointRadius: 4,
+                            pointBackgroundColor: 'rgba(153, 102, 255, 1)'
+                        },
+                        {
+                            label: 'Meta do Curso',
+                            data: projectionData.map(() => progress.target),
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Projeção de Captação'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Função para adicionar curso
+        function addCourse() {
+            const courseName = document.getElementById('courseName').value.trim();
+            const targetStudents = parseInt(document.getElementById('targetStudents').value);
+            const currentStudents = parseInt(document.getElementById('currentStudents').value);
+            
+            if (!courseName || isNaN(targetStudents) || isNaN(currentStudents) || 
+                targetStudents <= 0 || currentStudents < 0) {
+                alert('Por favor, preencha todos os campos corretamente:\n\n' +
+                      '- Nome do curso é obrigatório\n' +
+                      '- Meta de alunos deve ser maior que 0\n' +
+                      '- Alunos captados deve ser 0 ou mais');
+                return;
+            }
+            
+            if (currentStudents > targetStudents) {
+                alert('O número de alunos captados não pode ser maior que a meta!');
+                return;
+            }
+            
+            const course = {
+                id: Date.now(),
+                name: courseName,
+                targetStudents: targetStudents,
+                currentStudents: currentStudents,
+                deadline: currentDeadline
+            };
+            
+            courses.push(course);
+            renderCoursesList();
+            updateUI();
+            
+            // Limpar formulário
+            document.getElementById('courseName').value = '';
+            document.getElementById('targetStudents').value = '';
+            document.getElementById('currentStudents').value = '';
+            
+            // Focar no primeiro campo
+            document.getElementById('courseName').focus();
+        }
+        
+        // Função para remover curso
+        function removeCourse(id, event) {
+            event.stopPropagation(); // Impede que o clique propague para o curso
+            courses = courses.filter(course => course.id !== id);
+            renderCoursesList();
+            updateUI();
+            
+            // Se o curso removido era o selecionado, voltar para visão geral
+            if (selectedCourse && selectedCourse.id === id) {
+                showAllCourses();
+            }
+        }
+        
+        // Função para editar alunos captados
+        function editCaptured(id, element, event) {
+            event.stopPropagation(); // Impede que o clique propague para o curso
+            
+            const course = courses.find(c => c.id === id);
+            if (!course) return;
+            
+            // Criar input para edição
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.className = 'edit-input';
+            input.value = course.currentStudents;
+            input.min = 0;
+            input.max = course.targetStudents;
+            
+            // Substituir o texto pelo input
+            const infoElement = element.parentElement;
+            infoElement.innerHTML = '';
+            infoElement.appendChild(input);
+            input.focus();
+            
+            // Adicionar evento para salvar ao pressionar Enter
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    saveCaptured(id, input.value);
+                }
+            });
+            
+            // Adicionar evento para salvar ao perder o foco
+            input.addEventListener('blur', () => {
+                saveCaptured(id, input.value);
+            });
+        }
+        
+        // Função para salvar alunos captados
+        function saveCaptured(id, value) {
+            const course = courses.find(c => c.id === id);
+            if (!course) return;
+            
+            const newValue = parseInt(value);
+            
+            if (isNaN(newValue) || newValue < 0) {
+                alert('Por favor, insira um número válido maior ou igual a zero');
+                renderCoursesList();
+                return;
+            }
+            
+            if (newValue > course.targetStudents) {
+                alert(`O número de alunos captados não pode ser maior que a meta (${course.targetStudents})`);
+                renderCoursesList();
+                return;
+            }
+            
+            course.currentStudents = newValue;
+            renderCoursesList();
+            updateUI();
+            
+            // Se o curso está sendo visualizado, atualizar detalhes
+            if (selectedCourse && selectedCourse.id === id) {
+                showCourseDetails(course);
+            }
+        }
+        
+        // Função para renderizar a lista de cursos
+        function renderCoursesList() {
+            if (courses.length === 0) {
+                coursesList.innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-book-open"></i>
+                        <p>Nenhum curso adicionado ainda.</p>
+                        <p>Adicione seu primeiro curso usando o formulário ao lado!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            coursesList.innerHTML = '';
+            
+            courses.forEach(course => {
+                const progress = (course.currentStudents / course.targetStudents) * 100;
+                const progressColor = progress >= 70 ? 'var(--success)' : 
+                                    progress >= 40 ? 'var(--warning)' : 'var(--danger)';
+                
+                const isSelected = selectedCourse && selectedCourse.id === course.id;
+                
+                const courseEl = document.createElement('div');
+                courseEl.className = `course-item ${isSelected ? 'selected' : ''}`;
+                courseEl.onclick = () => showCourseDetails(course);
+                courseEl.innerHTML = `
+                    <div class="course-info">
+                        <h3>${course.name}</h3>
+                        <p>Meta: ${course.targetStudents} alunos | Prazo: ${course.deadline.split('-')[2]}/${course.deadline.split('-')[1]}</p>
+                        <div class="course-progress">
+                            <span>Captados: </span>
+                            <div id="captured-${course.id}">${course.currentStudents}</div>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progress}%; background: ${progressColor}"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="course-actions">
+                        <button class="btn btn-warning" onclick="editCaptured(${course.id}, this, event)">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger" onclick="removeCourse(${course.id}, event)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                
+                coursesList.appendChild(courseEl);
+            });
+        }
+        
+        // Função para exportar dados para CSV
+        function exportToCSV(data, filename) {
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + data.map(row => row.join(",")).join("\n");
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Função para baixar relatório de todos os cursos
+        function downloadAllCoursesCSV() {
+            if (courses.length === 0) {
+                alert("Não há cursos para exportar!");
+                return;
+            }
+            
+            const headers = ["Curso", "Meta de Alunos", "Alunos Captados", "Progresso (%)", "Prazo Final"];
+            const rows = [headers];
+            
+            courses.forEach(course => {
+                const progress = (course.currentStudents / course.targetStudents) * 100;
+                rows.push([
+                    `"${course.name}"`,
+                    course.targetStudents,
+                    course.currentStudents,
+                    progress.toFixed(2),
+                    course.deadline
+                ]);
+            });
+            
+            // Adicionar linha de totais
+            const totalTarget = courses.reduce((sum, course) => sum + course.targetStudents, 0);
+            const totalCaptured = courses.reduce((sum, course) => sum + course.currentStudents, 0);
+            const totalProgress = totalTarget > 0 ? (totalCaptured / totalTarget) * 100 : 0;
+            
+            rows.push([]);
+            rows.push(["TOTAL", totalTarget, totalCaptured, totalProgress.toFixed(2), ""]);
+            
+            exportToCSV(rows, "relatorio_cursos.csv");
+        }
+        
+        // Função para baixar relatório de um curso específico
+        function downloadCourseCSV() {
+            if (!selectedCourse) return;
+            
+            const course = selectedCourse;
+            const progress = calculateSingleCourseProgress(course);
+            
+            const headers = ["Curso", "Meta de Alunos", "Alunos Captados", "Alunos Faltantes", "Progresso (%)", "Ritmo Atual", "Ritmo Necessário", "Projeção Final", "Prazo Final", "Dias Úteis Restantes"];
+            const rows = [headers];
+            
+            rows.push([
+                `"${course.name}"`,
+                course.targetStudents,
+                course.currentStudents,
+                progress.remaining,
+                progress.captured > 0 ? (course.currentStudents/course.targetStudents*100).toFixed(2) : 0,
+                progress.currentRhythm.toFixed(2),
+                progress.requiredRhythm.toFixed(2),
+                Math.min(Math.round(progress.finalProjection), course.targetStudents),
+                course.deadline,
+                progress.businessDaysLeft
+            ]);
+            
+            exportToCSV(rows, `relatorio_${course.name.replace(/\s+/g, '_')}.csv`);
+        }
+        
+        // Event Listeners
+        addCourseBtn.addEventListener('click', addCourse);
+        backButton.addEventListener('click', showAllCourses);
+        downloadAllCsv.addEventListener('click', downloadAllCoursesCSV);
+        downloadCourseCsv.addEventListener('click', downloadCourseCSV);
+        
+        // Permitir adicionar com Enter
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addCourse();
+            }
+        });
+        
+        // Configurar botões de prazo
+        deadlineButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                deadlineButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Atualizar prazo selecionado
+                currentDeadline = btn.dataset.deadline;
+                currentDeadlineDisplay = btn.dataset.display;
+                
+                // Atualizar exibição
+                currentDeadlineDisplayEl.textContent = currentDeadlineDisplay;
+                
+                // Atualizar todos os cursos com o novo prazo
+                courses.forEach(course => {
+                    course.deadline = currentDeadline;
+                });
+                
+                // Se um curso está selecionado, atualizamos a visualização de detalhes
+                if (selectedCourse) {
+                    showCourseDetails(selectedCourse);
+                }
+                
+                // Atualizar a lista de cursos e a UI geral
+                renderCoursesList();
+                updateUI();
+            });
+        });
+        
+        // Inicializar a aplicação
+        renderCoursesList();
+        updateUI();
+        
+        // Adicionar cursos de exemplo para demonstração
+        setTimeout(() => {
+            courses = [
+                {
+                    id: 1,
+                    name: "MBA em Gestão de Projetos",
+                    targetStudents: 80,
+                    currentStudents: 45,
+                    deadline: currentDeadline
+                },
+                {
+                    id: 2,
+                    name: "Especialização em Marketing Digital",
+                    targetStudents: 50,
+                    currentStudents: 18,
+                    deadline: currentDeadline
+                },
+                {
+                    id: 3,
+                    name: "Curso de Data Science",
+                    targetStudents: 65,
+                    currentStudents: 52,
+                    deadline: currentDeadline
+                }
+            ];
+            
+            renderCoursesList();
+            updateUI();
+        }, 1000);
+    </script>
+</body>
+</html>
