@@ -542,6 +542,12 @@
             margin: 5px 0;
         }
         
+        .real-rhythm-box {
+            background-color: rgba(153, 102, 255, 0.1);
+            border: 2px solid #9c7bff;
+            margin-top: 10px;
+        }
+        
         @media (max-width: 768px) {
             .main-content {
                 flex-direction: column;
@@ -581,7 +587,7 @@
     <div class="container">
         <header>
             <h1><i class="fas fa-graduation-cap"></i> Sistema de Captação de Alunos</h1>
-            <p>Acompanhe o ritmo de captação e projeções por curso</p>
+            <p>Acompanhe o ritmo real de captação e projeções por curso</p>
             
             <div class="deadline-header">
                 <i class="fas fa-calendar-alt"></i>
@@ -690,8 +696,8 @@
                         <div class="chart-header">
                             <h3 class="chart-title">Progresso por Curso</h3>
                             <div class="chart-actions">
-                                <button id="downloadAllCsv" class="btn btn-info">
-                                    <i class="fas fa-download"></i> Baixar Relatório
+                                <button id="downloadAllTxt" class="btn btn-info">
+                                    <i class="fas fa-file-download"></i> Baixar TXT
                                 </button>
                             </div>
                         </div>
@@ -716,8 +722,8 @@
                                 <h3 id="courseDetailTitle">Detalhes do Curso</h3>
                             </div>
                             <div class="chart-actions">
-                                <button id="downloadCourseCsv" class="btn btn-info">
-                                    <i class="fas fa-download"></i> Baixar Relatório
+                                <button id="downloadCourseTxt" class="btn btn-info">
+                                    <i class="fas fa-file-download"></i> Baixar TXT
                                 </button>
                             </div>
                         </div>
@@ -770,6 +776,12 @@
                                     <div id="requiredRhythm" class="rhythm-value">0.0</div>
                                     <p>alunos/dia</p>
                                 </div>
+                            </div>
+                            
+                            <div class="rhythm-box real-rhythm-box">
+                                <h4>Ritmo Real de Captação</h4>
+                                <div id="realRhythm" class="rhythm-value">0.0</div>
+                                <p>alunos/dia (baseado em dias úteis)</p>
                             </div>
                             
                             <div class="projection-card">
@@ -846,11 +858,12 @@
         const courseRemainingEl = document.getElementById('courseRemaining');
         const courseProgressPercentEl = document.getElementById('courseProgressPercent');
         const courseProgressBar = document.getElementById('courseProgressBar');
-        const downloadAllCsv = document.getElementById('downloadAllCsv');
-        const downloadCourseCsv = document.getElementById('downloadCourseCsv');
+        const downloadAllTxt = document.getElementById('downloadAllTxt');
+        const downloadCourseTxt = document.getElementById('downloadCourseTxt');
         const courseRhythmStatus = document.getElementById('courseRhythmStatus');
         const currentRhythmEl = document.getElementById('currentRhythm');
         const requiredRhythmEl = document.getElementById('requiredRhythm');
+        const realRhythmEl = document.getElementById('realRhythm');
         const finalProjectionEl = document.getElementById('finalProjection');
         const currentDeadlineDisplayEl = document.getElementById('currentDeadlineDisplay');
         
@@ -961,8 +974,11 @@
             // Calcular ritmo necessário
             const requiredRhythm = businessDaysLeft > 0 ? (remaining / businessDaysLeft) : 0;
             
+            // Calcular ritmo real (baseado em dias úteis)
+            const realRhythm = businessDaysElapsed > 0 ? (captured / businessDaysElapsed) : 0;
+            
             // Calcular projeção final
-            const finalProjection = captured + (currentRhythm * businessDaysLeft);
+            const finalProjection = captured + (realRhythm * businessDaysLeft);
             
             // Determinar status
             let status = "";
@@ -982,6 +998,7 @@
                 remaining,
                 currentRhythm,
                 requiredRhythm,
+                realRhythm,
                 finalProjection,
                 businessDaysLeft,
                 businessDaysElapsed,
@@ -1042,6 +1059,7 @@
             courseRhythmStatus.className = `rhythm-status ${progress.rhythmStatus}`;
             currentRhythmEl.textContent = progress.currentRhythm.toFixed(2);
             requiredRhythmEl.textContent = progress.requiredRhythm.toFixed(2);
+            realRhythmEl.textContent = progress.realRhythm.toFixed(2);
             
             // Atualizar projeção final
             finalProjectionEl.textContent = `${Math.min(Math.round(progress.finalProjection), progress.target)} alunos`;
@@ -1278,8 +1296,8 @@
             projectionData.push(progress.captured);
             projectionLabels.push('Hoje');
             
-            // Calcular incremento diário (ritmo atual)
-            const dailyIncrement = progress.currentRhythm;
+            // Calcular incremento diário (ritmo real)
+            const dailyIncrement = progress.realRhythm;
             let currentValue = progress.captured;
             let currentDate = new Date(today);
             
@@ -1522,84 +1540,95 @@
             });
         }
         
-        // Função para exportar dados para CSV
-        function exportToCSV(data, filename) {
-            const csvContent = "data:text/csv;charset=utf-8," 
-                + data.map(row => row.join(",")).join("\n");
-            
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", filename);
-            document.body.appendChild(link);
-            
+        // Função para exportar dados para TXT
+        function exportToTXT(data, filename) {
+            const blob = new Blob([data], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
             link.click();
-            document.body.removeChild(link);
         }
         
-        // Função para baixar relatório de todos os cursos
-        function downloadAllCoursesCSV() {
+        // Função para baixar relatório de todos os cursos em TXT
+        function downloadAllCoursesTXT() {
             if (courses.length === 0) {
                 alert("Não há cursos para exportar!");
                 return;
             }
             
-            const headers = ["Curso", "Meta de Alunos", "Alunos Captados", "Progresso (%)", "Prazo Final"];
-            const rows = [headers];
+            let txtContent = "RELATÓRIO DE CAPTAÇÃO DE ALUNOS\n";
+            txtContent += "==================================\n\n";
+            txtContent += `Data: ${new Date().toLocaleDateString('pt-BR')}\n`;
+            txtContent += `Prazo Final: ${currentDeadlineDisplay}\n\n`;
+            
+            txtContent += "CURSOS:\n";
+            txtContent += "-------\n";
             
             courses.forEach(course => {
                 const progress = (course.currentStudents / course.targetStudents) * 100;
-                rows.push([
-                    `"${course.name}"`,
-                    course.targetStudents,
-                    course.currentStudents,
-                    progress.toFixed(2),
-                    course.deadline
-                ]);
+                const progressData = calculateSingleCourseProgress(course);
+                
+                txtContent += `\nCurso: ${course.name}\n`;
+                txtContent += `- Meta: ${course.targetStudents} alunos\n`;
+                txtContent += `- Captados: ${course.currentStudents} alunos\n`;
+                txtContent += `- Progresso: ${progress.toFixed(2)}%\n`;
+                txtContent += `- Ritmo Real: ${progressData.realRhythm.toFixed(2)} alunos/dia\n`;
+                txtContent += `- Projeção Final: ${Math.min(Math.round(progressData.finalProjection), course.targetStudents)} alunos\n`;
+                txtContent += `- Prazo: ${course.deadline}\n`;
             });
             
-            // Adicionar linha de totais
+            // Adicionar totais
             const totalTarget = courses.reduce((sum, course) => sum + course.targetStudents, 0);
             const totalCaptured = courses.reduce((sum, course) => sum + course.currentStudents, 0);
             const totalProgress = totalTarget > 0 ? (totalCaptured / totalTarget) * 100 : 0;
             
-            rows.push([]);
-            rows.push(["TOTAL", totalTarget, totalCaptured, totalProgress.toFixed(2), ""]);
+            txtContent += "\nTOTAIS:\n";
+            txtContent += "-------\n";
+            txtContent += `- Meta Total: ${totalTarget} alunos\n`;
+            txtContent += `- Total Captados: ${totalCaptured} alunos\n`;
+            txtContent += `- Progresso Geral: ${totalProgress.toFixed(2)}%\n`;
             
-            exportToCSV(rows, "relatorio_cursos.csv");
+            exportToTXT(txtContent, "relatorio_cursos.txt");
         }
         
-        // Função para baixar relatório de um curso específico
-        function downloadCourseCSV() {
+        // Função para baixar relatório de um curso específico em TXT
+        function downloadCourseTXT() {
             if (!selectedCourse) return;
             
             const course = selectedCourse;
             const progress = calculateSingleCourseProgress(course);
             
-            const headers = ["Curso", "Meta de Alunos", "Alunos Captados", "Alunos Faltantes", "Progresso (%)", "Ritmo Atual", "Ritmo Necessário", "Projeção Final", "Prazo Final", "Dias Úteis Restantes"];
-            const rows = [headers];
+            let txtContent = `RELATÓRIO DETALHADO: ${course.name}\n`;
+            txtContent += "===============================\n\n";
+            txtContent += `Data: ${new Date().toLocaleDateString('pt-BR')}\n`;
+            txtContent += `Prazo Final: ${course.deadline}\n\n`;
             
-            rows.push([
-                `"${course.name}"`,
-                course.targetStudents,
-                course.currentStudents,
-                progress.remaining,
-                progress.captured > 0 ? (course.currentStudents/course.targetStudents*100).toFixed(2) : 0,
-                progress.currentRhythm.toFixed(2),
-                progress.requiredRhythm.toFixed(2),
-                Math.min(Math.round(progress.finalProjection), course.targetStudents),
-                course.deadline,
-                progress.businessDaysLeft
-            ]);
+            txtContent += "DETALHES:\n";
+            txtContent += "---------\n";
+            txtContent += `- Meta: ${course.targetStudents} alunos\n`;
+            txtContent += `- Alunos Captados: ${course.currentStudents} alunos\n`;
+            txtContent += `- Alunos Faltantes: ${progress.remaining} alunos\n`;
+            txtContent += `- Progresso: ${(course.currentStudents/course.targetStudents*100).toFixed(2)}%\n\n`;
             
-            exportToCSV(rows, `relatorio_${course.name.replace(/\s+/g, '_')}.csv`);
+            txtContent += "RITMO DE CAPTAÇÃO:\n";
+            txtContent += "-----------------\n";
+            txtContent += `- Ritmo Real: ${progress.realRhythm.toFixed(2)} alunos/dia\n`;
+            txtContent += `- Ritmo Necessário: ${progress.requiredRhythm.toFixed(2)} alunos/dia\n`;
+            txtContent += `- Status: ${progress.status}\n\n`;
+            
+            txtContent += "PROJEÇÕES:\n";
+            txtContent += "-----------\n";
+            txtContent += `- Projeção Final: ${Math.min(Math.round(progress.finalProjection), course.targetStudents)} alunos\n`;
+            txtContent += `- Dias Úteis Restantes: ${progress.businessDaysLeft} dias\n`;
+            
+            exportToTXT(txtContent, `relatorio_${course.name.replace(/\s+/g, '_')}.txt`);
         }
         
         // Event Listeners
         addCourseBtn.addEventListener('click', addCourse);
         backButton.addEventListener('click', showAllCourses);
-        downloadAllCsv.addEventListener('click', downloadAllCoursesCSV);
-        downloadCourseCsv.addEventListener('click', downloadCourseCSV);
+        downloadAllTxt.addEventListener('click', downloadAllCoursesTXT);
+        downloadCourseTxt.addEventListener('click', downloadCourseTXT);
         
         // Permitir adicionar com Enter
         document.addEventListener('keypress', (e) => {
@@ -1640,36 +1669,6 @@
         // Inicializar a aplicação
         renderCoursesList();
         updateUI();
-        
-        // Adicionar cursos de exemplo para demonstração
-        setTimeout(() => {
-            courses = [
-                {
-                    id: 1,
-                    name: "MBA em Gestão de Projetos",
-                    targetStudents: 80,
-                    currentStudents: 45,
-                    deadline: currentDeadline
-                },
-                {
-                    id: 2,
-                    name: "Especialização em Marketing Digital",
-                    targetStudents: 50,
-                    currentStudents: 18,
-                    deadline: currentDeadline
-                },
-                {
-                    id: 3,
-                    name: "Curso de Data Science",
-                    targetStudents: 65,
-                    currentStudents: 52,
-                    deadline: currentDeadline
-                }
-            ];
-            
-            renderCoursesList();
-            updateUI();
-        }, 1000);
     </script>
 </body>
 </html>
